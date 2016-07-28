@@ -1,0 +1,220 @@
+gulp            = require 'gulp'
+runSequence     = require 'run-sequence'
+autoprefixer    = require 'gulp-autoprefixer'
+order           = require 'gulp-order'
+del             = require 'del'
+gulpif          = require 'gulp-if'
+concat          = require 'gulp-concat'
+plumber         = require 'gulp-plumber'
+cache           = require 'gulp-cache'
+cached          = require 'gulp-cached'
+sourcemaps      = require 'gulp-sourcemaps'
+jade            = require 'gulp-jade'
+jadeInheritance = require 'gulp-jade-inheritance'
+templateCompile = require 'gulp-template-compile'
+sass            = require 'gulp-sass'
+minifyCSS       = require 'gulp-minify-css'
+coffee          = require 'gulp-coffee'
+uglify          = require 'gulp-uglify'
+imagemin        = require 'gulp-imagemin'
+
+paths              = {}
+paths.static       = '{{package}}/static/'
+paths.front        = '{{package}}/front/'
+paths.templates    = '{{package}}/templates/'
+paths.jade         = paths.front + 'jade/**/*.jade'
+paths.vendor       = paths.front + 'vendor/'
+paths.images       = paths.front + 'images/**/*'
+paths.fonts        = [
+    paths.front + 'fonts/*'
+    paths.vendor + 'fontawesome/fonts/*'
+]
+paths.sass         = paths.front + 'sass/**/*.sass'
+paths.csslibs      = [
+    paths.vendor + 'animate.css/animate.css'
+    paths.vendor + 'fontawesome/css/font-awesome.css'
+]
+paths.scripts      = paths.front + 'coffee/scripts.coffee'
+paths.jslibs       = [
+    paths.vendor + 'jquery/dist/jquery.js'
+    paths.vendor + 'bootstrap/dist/js/bootstrap.js'
+    paths.vendor + 'waypoints/lib/jquery.waypoints.js'
+    paths.vendor + 'slick-carousel/slick/slick.js'
+]
+paths.app_template = paths.front + 'coffee/templates/**/*.jade'
+paths.app          = [
+    paths.front + 'coffee/app.coffee'
+    paths.front + 'coffee/apps/**/*.coffee'
+]
+paths.app_order    = []
+paths.applibs      = [
+    paths.vendor + 'underscore/underscore.js'
+    paths.vendor + 'backbone/backbone.js'
+    paths.vendor + 'backbone.babysitter/lib/backbone.babysitter.js'
+    paths.vendor + 'backbone.wreqr/lib/backbone.wreqr.js'
+    paths.vendor + 'backbone.marionette/lib/core/backbone.marionette.js'
+]
+
+isDeploy = false
+###############################################################################
+# Layout Related tasks
+###############################################################################
+
+gulp.task 'jade', ->
+    gulp.src paths.jade
+        .pipe plumber()
+        .pipe cached('jade')
+        .pipe jade({pretty: true})
+        .pipe gulp.dest(paths.templates)
+
+gulp.task 'app-template', ->
+    gulp.src paths.app_template
+        .pipe plumber()
+        .pipe cached('app-template')
+        .pipe jadeInheritance({basedir: paths.front + 'coffee/templates'})
+        .pipe jade({pretty: true})
+        .pipe templateCompile()
+        .pipe concat('templates.js')
+        .pipe gulpif(isDeploy, uglify({mangle:false, preserveComments: false}))
+        .pipe gulp.dest(paths.static + 'scripts/')
+
+###############################################################################
+# CSS Related tasks
+###############################################################################
+
+gulp.task 'clear-sass-cache', ->
+    delete cached.caches['sass']
+
+gulp.task 'sass', ->
+    gulp.src paths.sass
+        .pipe plumber()
+        .pipe gulpif(!isDeploy, sourcemaps.init())
+        .pipe cached('sass')
+        .pipe sass()
+        .pipe concat('styles.css')
+        .pipe autoprefixer({cascade: false})
+        .pipe gulpif(isDeploy, minifyCSS({noAdvanced: true}))
+        .pipe gulpif(!isDeploy, sourcemaps.write('../maps'))
+        .pipe gulp.dest(paths.static + 'styles/')
+
+gulp.task 'csslibs', ->
+    gulp.src paths.csslibs
+        .pipe concat('libs.css')
+        .pipe gulpif(isDeploy, minifyCSS({noAdvanced: true}))
+        .pipe gulp.dest(paths.static + 'styles/')
+
+##############################################################################
+# JS Related tasks
+##############################################################################
+
+gulp.task 'scripts', ->
+    gulp.src paths.scripts
+        .pipe gulpif(!isDeploy, sourcemaps.init())
+        .pipe cache(coffee())
+        .on 'error', (err) ->
+            console.log err.toString()
+            @emit 'end'
+        .pipe concat('scripts.js')
+        .pipe gulpif(!isDeploy, sourcemaps.write('../maps'))
+        .pipe gulpif(isDeploy, uglify({mangle:false, preserveComments: false}))
+        .pipe gulp.dest(paths.static + 'scripts/')
+
+gulp.task 'jslibs', ->
+    gulp.src paths.jslibs
+        .pipe plumber()
+        .pipe gulpif(!isDeploy, sourcemaps.init())
+        .pipe concat('libs.js')
+        .pipe gulpif(!isDeploy, sourcemaps.write('../maps'))
+        .pipe gulpif(isDeploy, uglify({mangle:false, preserveComments: false}))
+        .pipe gulp.dest(paths.static + 'scripts/')
+
+gulp.task 'app', ->
+    gulp.src paths.app
+        .pipe order(paths.app_order, {base: '.'})
+        .pipe gulpif(!isDeploy, sourcemaps.init())
+        .pipe cache(coffee())
+        .on 'error', (err) ->
+            console.log err.toString()
+            @emit 'end'
+        .pipe concat('app.js')
+        .pipe gulpif(!isDeploy, sourcemaps.write('../maps'))
+        .pipe gulpif(isDeploy, uglify({mangle:false, preserveComments: false}))
+        .pipe gulp.dest(paths.static + 'scripts/')
+
+gulp.task 'applibs', ->
+    gulp.src paths.applibs
+        .pipe plumber()
+        .pipe gulpif(!isDeploy, sourcemaps.init())
+        .pipe concat('applibs.js')
+        .pipe gulpif(!isDeploy, sourcemaps.write('../maps'))
+        .pipe gulpif(isDeploy, uglify({mangle:false, preserveComments: false}))
+        .pipe gulp.dest(paths.static + 'scripts/')
+
+##############################################################################
+# Common tasks
+##############################################################################
+
+gulp.task 'clear-static', ->
+    del.sync paths.static + 'fonts'
+    del.sync paths.static + 'images'
+    del.sync paths.static + 'maps'
+    del.sync paths.static + 'scripts'
+    del.sync paths.static + 'styles'
+
+gulp.task 'clear', (done) ->
+    cache.clearAll done
+
+gulp.task 'copy-fonts', ->
+    gulp.src paths.fonts
+        .pipe gulp.dest(paths.static + 'fonts/')
+
+gulp.task 'copy-images', ->
+    gulp.src paths.images
+        .pipe gulpif(isDeploy, imagemin({progressive: true}))
+        .pipe gulp.dest(paths.static + 'images/')
+
+gulp.task 'copy', [ 'copy-fonts', 'copy-images' ]
+
+# Rerun the task when a file changes
+gulp.task 'watch', ->
+    gulp.watch paths.jade, ['jade']
+    gulp.watch paths.sass, ['clear-sass-cache', 'sass']
+    gulp.watch paths.csslibs, ['csslibs']
+    gulp.watch paths.scripts, ['scripts']
+    gulp.watch paths.jslibs, ['jslibs']
+    gulp.watch paths.app_template, ['app-template']
+    gulp.watch paths.app, ['app']
+    gulp.watch paths.applibs, ['applibs']
+    gulp.watch paths.images, ['copy-images']
+    gulp.watch paths.fonts, ['copy-fonts']
+
+gulp.task 'deploy', (cb) ->
+    isDeploy = true
+    rs_list = [
+        'copy'
+        'jade'
+        'sass'
+        'csslibs'
+        'scripts'
+        'jslibs'
+        'app-template'
+        'app'
+        'applibs'
+    ]
+    runSequence 'clear-static', 'clear-sass-cache', rs_list, cb
+
+# The default task (called when you run gulp from cli)
+gulp.task 'default', (cb) ->
+    rs_list = [
+        'copy'
+        'jade'
+        'sass'
+        'csslibs'
+        'scripts'
+        'jslibs'
+        'app-template'
+        'app'
+        'applibs'
+        'watch'
+    ]
+    runSequence 'clear-static', 'clear-sass-cache', rs_list, cb

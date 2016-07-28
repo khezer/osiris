@@ -1,0 +1,2 @@
+[extension:.html]
+plugin = babel-jinja2

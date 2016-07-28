@@ -1,0 +1,7 @@
+def includeme(config):
+    # {{project}} routes
+    config.add_route('{{package}}', '{{package}}')
+
+    # Scan {{package}} app
+    config.scan()
+

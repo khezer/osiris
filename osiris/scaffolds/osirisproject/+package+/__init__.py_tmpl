@@ -1,0 +1,29 @@
+from pyramid.config import Configurator
+from .locale import _
+
+_ = _  # PyFlakes
+
+
+def main(global_config, **settings):
+    """ This function returns Pyramid WSGI application.
+    """
+    config = Configurator(settings=settings)
+
+    # Include pyramid base Osiris Web Application Framework
+    config.include('osiris')
+
+    # Add translation directory
+    config.add_translation_dirs('{{package}}:locale/')
+
+    # Static location and configuration
+    config.add_static_view('static', '{{package}}:static', cache_max_age=3600)
+
+    # Template location and configuration
+    config.add_jinja2_search_path('{{package}}:templates', name='.html')
+
+    # Include project apps
+    config.include('{{package}}.apps.core')
+    config.include('{{package}}.apps.page')
+    config.include('{{package}}.apps.block')
+
+    return config.make_wsgi_app()

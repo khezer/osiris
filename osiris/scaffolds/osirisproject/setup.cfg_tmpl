@@ -1,0 +1,6 @@
+[easy_install]
+zip_ok = false
+
+[aliases]
+devtools = develop easy_install {{package}}[devtools]
+

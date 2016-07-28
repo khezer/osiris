@@ -1,0 +1,14 @@
+from pyramid.view import view_config
+from osiris.view import View
+from {{osirisproject}}.locale import _
+from .models import {{project}}Model
+
+
+class {{project}}View(View):
+    """ {{project}} view class
+    """
+    __model__ = {{project}}Model()
+
+    @view_config(route_name='{{package}}', renderer='{{package}}/{{package}}.html')
+    def {{package}}_view(self):
+        return {'title': _('{{project}} View')}

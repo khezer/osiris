@@ -1,0 +1,5 @@
+from colander import MappingSchema, SchemaNode, String, Integer
+
+
+class {{project}}Schema(MappingSchema):
+    pass

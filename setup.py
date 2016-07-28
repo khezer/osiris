@@ -57,5 +57,8 @@ setup(
     entry_points="""\
     [paste.app_factory]
     main = osiris:main
+    [pyramid.scaffold]
+    osirisproject=osiris.scaffolds:OsirisProjectTemplate
+    osirisapp=osiris.scaffolds:OsirisAppTemplate
     """,
 )

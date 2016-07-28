@@ -1,0 +1,54 @@
+import os
+
+from setuptools import setup, find_packages
+
+here = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(here, 'README.md')) as f:
+    README = f.read()
+
+with open(os.path.join(here, 'CHANGES.md')) as f:
+    CHANGES = f.read()
+
+requires = [
+    'osiris',
+]
+
+requires_links = [
+    'git+https://github.com/verkut/osiris.git#egg=osiris'
+]
+
+devtools_requires = [
+    'pyramid_debugtoolbar',
+    'pyramid_bpython',
+]
+
+setup(
+    name='{{package}}',
+    version='0.0',
+    description='{{project}} project',
+    long_description=README + '\n\n' + CHANGES,
+    classifiers=[
+        "Programming Language :: Python",
+        "Framework :: Osiris top of Pyramid",
+        "Topic :: Internet :: WWW/HTTP",
+        "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
+    ],
+    author='',
+    author_email='',
+    url='',
+    keywords='',
+    packages=find_packages(),
+    include_package_data=True,
+    zip_safe=False,
+    install_requires=requires,
+    extras_require={
+        'devtools': devtools_requires,
+    },
+    tests_require=requires,
+    test_suite='{{package}}',
+    dependency_links=requires_links,
+    entry_points="""\
+    [paste.app_factory]
+    main = {{package}}:main
+    """,
+)

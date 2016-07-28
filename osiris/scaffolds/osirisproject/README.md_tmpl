@@ -1,0 +1,16 @@
+{{project}} README
+================
+Getting Started
+-------------------
+```bash
+cd {{package}}
+
+bower install --save
+
+npm install --save-dev
+
+$VENV/bin/python setup.py develop
+
+$VENV/bin/pserve development.ini
+
+```

@@ -1,0 +1,14 @@
+from pyramid.view import view_config
+from osiris.view import View
+from {{package}}.locale import _
+from .models import PageModel
+
+
+class PageView(View):
+    """ Page view class
+    """
+    __model__ = PageModel()
+
+    @view_config(route_name='page', renderer='page/page.html')
+    def page_view(self):
+        return {'title': _('Page View')}

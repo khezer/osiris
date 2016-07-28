@@ -1,0 +1,31 @@
+{
+  "name": "{{package}}",
+  "version": "0.0.0",
+  "description": "{{project}} front compile packages.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "private": true,
+  "devDependencies": {
+    "coffee-script": "*",
+    "del": "*",
+    "gulp": "*",
+    "gulp-autoprefixer": "*",
+    "gulp-cache": "*",
+    "gulp-cached": "*",
+    "gulp-coffee": "*",
+    "gulp-concat": "*",
+    "gulp-if": "*",
+    "gulp-imagemin": "*",
+    "gulp-jade": "*",
+    "gulp-jade-inheritance": "*",
+    "gulp-minify-css": "*",
+    "gulp-order": "*",
+    "gulp-plumber": "*",
+    "gulp-sass": "*",
+    "gulp-sourcemaps": "*",
+    "gulp-template-compile": "*",
+    "gulp-uglify": "*",
+    "run-sequence": "*"
+  }
+}

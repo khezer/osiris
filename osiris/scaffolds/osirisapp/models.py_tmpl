@@ -1,0 +1,10 @@
+from osiris.model import Model
+from .schemas import {{project}}Schema
+
+
+class {{project}}Model(Model):
+    """ Stores {{package}}s.
+    """
+
+    __collection__ = '{{package}}s'
+    __collection_schema__ = {{project}}Schema()

@@ -1,0 +1,38 @@
+doctype html
+html(lang='\{\{ request.locale_name \}\}')
+    head
+        //- Meta tags
+        meta(charset='utf-8')
+        meta(name='viewport', content='width=device-width, initial-scale=1')
+        //- Force Internet Explorer to use its Latest Rendering Mode
+        meta(http-equiv='x-ua-compatible', content='IE=edge')
+        | {% block meta %} {% endblock %}
+
+        //- Page title
+        title {% block title %} {% endblock %}
+
+        //- Favicon
+        link(rel='shortcut icon', href="\{\{ request.static_url('{{package}}:static/favicon.ico') \}\}")
+
+        //- Styles
+        link(rel='stylesheet', href="\{\{ request.static_url('{{package}}:static/styles/libs.css') \}\}")
+        link(rel='stylesheet', href="\{\{ request.static_url('{{package}}:static/styles/styles.css') \}\}")
+
+    body(dir="\{\{ 'rtl' if request.locale_name in ['fa', 'ar'] else 'ltr' \}\}")
+
+        //- Header
+        header
+            a(href="\{\{ request.route_url('frontpage') \}\}")
+                | {% trans %} FrontPage {% endtrans %}
+
+        //- main Content
+        main
+            | {% block content %} {% endblock %}
+
+        //- Footer
+        footer
+            | \{\{ panel('block', 'footer') \}\}
+
+        //- Scripts
+        script(type='text/javascript', src="\{\{ request.static_url('{{package}}:static/scripts/libs.js') \}\}")
+        script(type='text/javascript', src="\{\{ request.static_url('{{package}}:static/scripts/scripts.js') \}\}")
