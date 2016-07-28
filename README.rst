@@ -1,5 +1,5 @@
-osiris README
-==================
+Osiris - Build Web Applications on top of the pyramid framework.
+================================================================
 
 Getting Started
 ---------------
