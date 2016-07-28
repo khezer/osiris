@@ -1,0 +1,13 @@
+# Ignore files that may contain non important information.
+*.swp
+*.swo
+*.log
+.tags
+*.pyc
+
+# Ignore paths that contain non important files.
+.sass-cache/
+tmp/
+node_modules/
+__pycache__/
+*.egg-info/
