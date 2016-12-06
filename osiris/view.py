@@ -1,41 +1,47 @@
-from cornice.schemas import CorniceSchema
+# from cornice.schemas import CorniceSchema
 
 
 class ResourceView(object):
-    __model__ = None
-    __schema__ = None
+    # __model__ = None
+    # __schema__ = None
 
-    def __init__(self, context, request):
-        self.context = context
+    def __init__(self, request):
         self.request = request
 
         # Accepted content_type of request
         self.content_type = "application/json"
 
         # Database connection
-        self.db = request.db
+        if request.db:
+            self.db = request.db
 
-        # Model
-        if self.__model__ is not None:
-            self.model = request.db[str(self.__model__)]
+            # Model
+            # if self.__model__ is not None:
+            #     self.model = request.db[str(self.__model__)]
+            #     self.model = self.__model__(request.db)
+
+        else:
+            self.db = None
+
 
         self._id = None
         if '_id' in self.request.matchdict:
             self._id = self.request.matchdict['_id']
 
-        if request.method != 'GET' or \
-                (self._id is not None and request.method == 'DELETE'):
-            # Set self.json for POST, PUT, PATCH, DELETE request method
+        if request.method in ['POST', 'PUT', 'PATCH']:
+            # Set self.json for POST, PUT, PATCH request method
             self.json = request.json
 
-            if self.__schema__ is not None:
-                schema = self.__schema__
-            else:
-                schema = self.model.schema
+            # schema = None
+            # if self.__schema__ is not None:
+            #     schema = self.__schema__
+            # elif self.__model__ is not None:
+            #     schema = self.model.schema
 
-            # Data validation schema
-            self.schema = CorniceSchema.from_colander(
-                schema, bind_request=False)
+            # # Data validation schema
+            # if schema is not None:
+            #     self.schema = CorniceSchema.from_colander(
+            #         schema, bind_request=False)
 
     def collection_get(self):
         return {}
@@ -71,13 +77,17 @@ class ResourceView(object):
 class View(object):
     __model__ = None
 
-    def __init__(self, context, request):
-        self.context = context
+    def __init__(self, request):
         self.request = request
 
         # Database connection
-        self.db = request.db
+        if request.db:
+            self.db = request.db
 
-        # Model
-        if self.__model__ is not None:
-            self.model = request.db[str(self.__model__)]
+            # Model
+            if self.__model__ is not None:
+                self.model = request.db[str(self.__model__)]
+
+        else:
+            self.db = None
+

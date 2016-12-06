@@ -1,5 +1,5 @@
 from pyramid_layout.panel import panel_config
-from wgi.view import View
+from osiris.view import View
 from .models import BlockModel
 
 

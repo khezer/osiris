@@ -27,8 +27,8 @@ class Model(object):
     def update_one_by_id(self, _id, update):
         return self.update_one({'_id': ObjectId(_id)}, self.filter(update))
 
-    def update_one(self, filter, update):
-        return self.collection.update_one(filter, self.filter(update))
+    def update_one(self, filter, update, upsert=False):
+        return self.collection.update_one(filter, self.filter(update), upsert)
 
     def update_many(self, filter, update):
         return self.collection.update_many(filter, self.filter(update))
@@ -47,7 +47,7 @@ class Model(object):
         return document
 
     def find_one(self, criteria, projection=None):
-        if projection:
+        if projection is not None:
             document = self.collection.find_one(criteria, projection)
         else:
             document = self.collection.find_one(criteria)
@@ -60,18 +60,18 @@ class Model(object):
         return None
 
     def find(self, criteria=None, projection=None):
-        if criteria and projection:
+        if criteria is not None and projection is not None:
             documents = self.collection.find(criteria, projection)
-        elif criteria:
+        elif criteria is not None:
             documents = self.collection.find(criteria)
-        elif projection:
-            documents = self.collection.find({}, projection)
         else:
             documents = self.collection.find()
 
         docs = list()
         for doc in documents:
-            doc['_id'] = str(doc['_id'])
+            # Convert ObjectId to string
+            if '_id' in doc:
+                doc['_id'] = str(doc['_id'])
             docs.append(doc)
         return docs
 
