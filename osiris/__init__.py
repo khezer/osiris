@@ -33,8 +33,11 @@ def database(config):
     """
     def mongodb_connect(event):
         settings = event.request.registry.settings
-        mongo_client = MongoClient(settings['mongodb.uri'])
-        event.request.db = mongo_client[settings['mongodb.db']]
+        if 'mongodb.uri' in settings:
+            mongo_client = MongoClient(settings['mongodb.uri'])
+            event.request.db = mongo_client[settings['mongodb.db']]
+        else:
+            event.request.db = None
 
     # Connect to MongoDB database
     config.add_subscriber(mongodb_connect, NewRequest)
@@ -67,7 +70,8 @@ def auth(config):
 
 
 def static(config):
-    config.add_static_view('osiris/static', 'osiris:static', cache_max_age=3600)
+    config.add_static_view(
+        'osiris/static', 'osiris:static', cache_max_age=3600)
 
 
 def template(config):
