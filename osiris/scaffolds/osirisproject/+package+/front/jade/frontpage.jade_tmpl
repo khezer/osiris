@@ -1,5 +1,0 @@
-| {% extends main_template %}
-| {% block content %}
-div
-    h2 {% trans %} Wellcome to {{project}} front page. {% endtrans %}
-| {% endblock %}

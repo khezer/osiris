@@ -1,0 +1,177 @@
+var gulp               = require('gulp');
+var runSequence        = require('run-sequence');
+var autoprefixer       = require('gulp-autoprefixer');
+var order              = require('gulp-order');
+var del                = require('del');
+var gulpif             = require('gulp-if');
+var concat             = require('gulp-concat');
+var plumber            = require('gulp-plumber');
+var cache              = require('gulp-cache');
+var cached             = require('gulp-cached');
+var sourcemaps         = require('gulp-sourcemaps');
+var templateCompile    = require('gulp-template-compile');
+var sass               = require('gulp-sass');
+var sassGlob           = require('gulp-sass-glob');
+var minifyCSS          = require('gulp-minify-css');
+var uglify             = require('gulp-uglify');
+var imagemin           = require('gulp-imagemin');
+
+var isDeploy           = false;
+
+var paths              = {};
+paths.static           = '{{package}}/static/';
+paths.front            = '{{package}}/front/';
+paths.vendor           = paths.front + 'vendor/';
+paths.images           = paths.front + 'images/**/*';
+paths.fonts            = [
+  paths.front  + 'fonts/*',
+  paths.vendor + 'font-awesome/fonts/*'
+];
+paths.styles           = paths.front + 'styles/**/*.scss';
+paths.styles_include   = [
+  paths.vendor + 'bootstrap-sass/assets/stylesheets'
+];
+paths.styles_libs      = [
+  // paths.vendor + 'animate.css/animate.css',
+  paths.vendor + 'font-awesome/css/font-awesome.css'
+];
+
+paths.scripts          = [
+  paths.front + 'scripts/app.js',
+  paths.front + 'scripts/lib/entities/**/*.js',
+  paths.front + 'scripts/lib/utilities/**/*.js',
+  paths.front + 'scripts/lib/views/**/*.js',
+  paths.front + 'scripts/lib/controllers/**/*.js',
+  paths.front + 'scripts/lib/regions/**/*.js',
+  // paths.front + 'scripts/lib/components/**/*.js',
+  paths.front + 'scripts/entities/**/*.js',
+  paths.front + 'scripts/apps/**/*.js'
+];
+paths.scripts_libs     = [
+  paths.vendor + 'jquery/dist/jquery.js',
+  paths.vendor + 'bootstrap-sass/assets/javascripts/bootstrap.js',
+  paths.vendor + 'underscore/underscore.js',
+  paths.vendor + 'backbone/backbone.js',
+  paths.vendor + 'backbone.syphon/lib/backbone.syphon.js',
+  paths.vendor + 'backbone.marionette/lib/backbone.marionette.js'
+];
+paths.scripts_template = paths.front + 'templates/**/*.html';
+
+/**
+ * Layout Related tasks
+ */
+gulp.task('scripts-template', function() {
+  return gulp.src(paths.scripts_template)
+    .pipe(plumber())
+    .pipe(templateCompile())
+    .pipe(concat('templates.js'))
+    .pipe(gulpif(isDeploy, uglify({mangle:false, preserveComments: false})))
+    .pipe(gulp.dest(paths.static + 'scripts/'));
+});
+
+/**
+ * CSS Related tasks
+ */
+gulp.task('clear-styles-cache', function(){
+  return delete(cached.caches['styles']);
+});
+
+gulp.task('styles', function() {
+  return gulp.src(paths.styles)
+    .pipe(plumber())
+    .pipe(gulpif(!isDeploy, sourcemaps.init()))
+    // .pipe(cached('sass'))
+    .pipe(sassGlob())
+    .pipe(sass({includePaths: paths.styles_include}))
+    .pipe(concat('styles.css'))
+    .pipe(autoprefixer({cascade: false}))
+    .pipe(gulpif(isDeploy, minifyCSS({noAdvanced: true})))
+    .pipe(gulpif(!isDeploy, sourcemaps.write('../maps')))
+    .pipe(gulp.dest(paths.static + 'styles/'));
+});
+
+gulp.task('styles-libs', function() {
+  return gulp.src(paths.styles_libs)
+    .pipe(concat('libs.css'))
+    .pipe(gulpif(isDeploy, minifyCSS({noAdvanced: true})))
+    .pipe(gulp.dest(paths.static + 'styles/'));
+});
+
+/**
+ * JS Related tasks
+ */
+gulp.task('scripts', function() {
+  return gulp.src(paths.scripts)
+    .pipe(gulpif(!isDeploy, sourcemaps.init()))
+    .on('error', function(err){
+      console.log(err.toString());
+      this.emit('end');
+    })
+    .pipe(concat('scripts.js'))
+    .pipe(gulpif(!isDeploy, sourcemaps.write('../maps')))
+    .pipe(gulpif(isDeploy, uglify({mangle:false, preserveComments: false})))
+    .pipe(gulp.dest(paths.static + 'scripts/'));
+});
+
+gulp.task('scripts-libs', function(){
+  return gulp.src(paths.scripts_libs)
+    .pipe(plumber())
+    .pipe(gulpif(!isDeploy, sourcemaps.init()))
+    .pipe(concat('libs.js'))
+    .pipe(gulpif(!isDeploy, sourcemaps.write('../maps')))
+    .pipe(gulpif(isDeploy, uglify({mangle:false, preserveComments: false})))
+    .pipe(gulp.dest(paths.static + 'scripts/'));
+});
+
+/**
+ * Common tasks
+ */
+gulp.task('clear-static', function() {
+  del.sync(paths.static + 'fonts');
+  del.sync(paths.static + 'images');
+  del.sync(paths.static + 'maps');
+  del.sync(paths.static + 'scripts');
+  del.sync(paths.static + 'styles');
+});
+
+gulp.task('clear', function(done) {
+  cache.clearAll(done);
+});
+
+gulp.task('copy-fonts', function() {
+  return gulp.src(paths.fonts)
+    .pipe(gulp.dest(paths.static + 'fonts/'));
+});
+
+gulp.task('copy-images', function() {
+  return gulp.src(paths.images)
+    .pipe(gulpif(isDeploy, imagemin({progressive: true})))
+    .pipe(gulp.dest(paths.static + 'images/'));
+});
+
+gulp.task('copy', ['copy-fonts', 'copy-images']);
+
+// Rerun the task when a file changes
+gulp.task('watch', function() {
+  gulp.watch(paths.styles,           ['styles']);
+  gulp.watch(paths.styles_libs,      ['styles-libs']);
+  gulp.watch(paths.scripts,          ['scripts']);
+  gulp.watch(paths.scripts_libs,     ['scripts-libs']);
+  gulp.watch(paths.scripts_template, ['scripts-template']);
+  gulp.watch(paths.images,           ['copy-images']);
+  gulp.watch(paths.fonts,            ['copy-fonts']);
+});
+
+gulp.task('deploy', function(cb) {
+  isDeploy = true;
+  var rs_list = ['copy', 'styles', 'styles-libs',
+                 'scripts', 'scripts-libs', 'scripts-template'];
+  runSequence('clear-static', 'clear-styles-cache', rs_list, cb);
+});
+
+// The default task (called when you run gulp from cli)
+gulp.task('default', function(cb) {
+  var rs_list = ['copy', 'styles', 'styles-libs', 'scripts',
+                 'scripts-libs', 'scripts-template', 'watch'];
+  runSequence('clear-static', 'clear-styles-cache', rs_list, cb);
+});
