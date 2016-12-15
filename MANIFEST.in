@@ -1,0 +1,5 @@
+recursive-include osiris *
+
+recursive-exclude osiris *.pyc
+
+include *.txt *.ini *.md *.cfg
